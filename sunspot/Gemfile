@@ -7,3 +7,5 @@ gemspec
 group :development do
   gem 'rake'
 end
+
+gem 'pry-plus', groups: [:test, :development]

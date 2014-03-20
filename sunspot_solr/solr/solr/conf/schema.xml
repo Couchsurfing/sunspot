@@ -88,6 +88,13 @@
 
     <!-- A specialized field for geospatial search. If indexed, this fieldType must not be multivalued. -->
     <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
+    <fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType"
+               spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
+               geo="false"
+               worldBounds="-100 -100 100 100"
+               distErrPct="0.025"
+               maxDistErr="0.000009"
+               units="degrees"/>
   </types>
   <fields>
     <!-- Valid attributes for fields:
@@ -236,6 +243,9 @@
     <dynamicField name="*_llm" stored="false" type="location" multiValued="true" indexed="true"/>
     <dynamicField name="*_lls" stored="true" type="location" multiValued="false" indexed="true"/>
     <dynamicField name="*_llms" stored="true" type="location" multiValued="true" indexed="true"/>
+
+    <!-- Type used to index the polygon components for the "location_rpt" FieldType -->
+    <dynamicField name="*_rpt" stored="true" type="location_rpt" multiValued="true" indexed="true"/>
     
     <!-- required by Solr 4 -->
     <field name="_version_" type="string" indexed="true" stored="true" multiValued="false" />

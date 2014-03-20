@@ -375,6 +375,17 @@ module Sunspot
       end
     end
 
+    class LocationRptType < AbstractType
+      def indexed_name(name)
+        "#{name}_rpt"
+      end
+
+      def to_indexed(value)
+        points = value[:points].map { |el| "#{el[0]} #{el[1]}"}
+        "POLYGON((#{points.join(", ")}))"
+      end
+    end
+
     class ClassType < AbstractType
       def indexed_name(name) #:nodoc:
         'class_name'

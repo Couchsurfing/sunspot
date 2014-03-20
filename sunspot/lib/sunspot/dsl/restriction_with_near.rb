@@ -155,6 +155,14 @@ module Sunspot
       def in_bounding_box(first_corner, second_corner)
         @query.add_geo(Sunspot::Query::Bbox.new(@field, first_corner, second_corner))
       end
+
+      def containing_point(point)
+        obj = OpenStruct.new(field: @field, point: point)
+        def obj.to_params
+          {fq: %Q{#{field.indexed_name}:"Intersects(#{point[0]} #{point[1]})"}}
+        end
+        @query.add_geo(obj)
+      end
     end
   end
 end

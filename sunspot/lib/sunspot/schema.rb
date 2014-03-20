@@ -24,7 +24,7 @@ module Sunspot
       FieldType.new('tint', 'TrieInteger', 'it'),
       FieldType.new('tfloat', 'TrieFloat', 'ft'),
       FieldType.new('tdate', 'TrieInt', 'dt')
-
+      FieldType.new('location_rpt', 'SpatialRecursivePrefixTree', 'rpt')
     ]
 
     FIELD_VARIANTS = [

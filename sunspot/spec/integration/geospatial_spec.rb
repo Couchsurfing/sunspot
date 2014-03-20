@@ -64,6 +64,32 @@ describe "geospatial search" do
     end
   end
 
+  describe "filtering by polygon" do
+    before :all do
+      Sunspot.remove_all
+
+      @post = Post.new(:title       => "Howdy",
+                       :boundary => {:points => [[1,1],[1,7],[3,12],[5,6],[5,4],[1,1]]})
+      Sunspot.index!(@post)
+    end
+
+    it "matches post within the polygon" do
+      results = Sunspot.search(Post) {
+        with(:boundary).containing_point [2, 2]
+      }.results
+
+      results.should include(@post)
+    end
+
+    it "filters out posts not in the polygon" do
+      results = Sunspot.search(Post) {
+        with(:boundary).containing_point [2, 15]
+      }.results
+
+      results.should_not include(@post)
+    end
+  end
+
   describe "ordering by geodist" do
     before :all do
       Sunspot.remove_all

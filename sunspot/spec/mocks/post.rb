@@ -3,7 +3,8 @@ require File.join(File.dirname(__FILE__), 'super_class')
 
 class Post < SuperClass
   attr_accessor :title, :body, :blog_id, :published_at, :ratings_average,
-                :author_name, :featured, :expire_date, :coordinates, :tags
+                :author_name, :featured, :expire_date, :coordinates, :tags,
+                :boundary
   alias_method :featured?, :featured
 
   def category_ids
@@ -55,6 +56,7 @@ Sunspot.setup(Post) do
   end
   location :coordinates
   latlon(:coordinates_new) { coordinates }
+  location_rpt :boundary
 
   dynamic_string :custom_string, :stored => true
   dynamic_float :custom_float, :multiple => true, :using => :custom_fl
