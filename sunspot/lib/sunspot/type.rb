@@ -381,8 +381,18 @@ module Sunspot
       end
 
       def to_indexed(value)
-        points = value[:points].map { |el| "#{el[0]} #{el[1]}"}
-        "POLYGON((#{points.join(", ")}))"
+        polygons = value[:polygons]
+        if polygons.length == 1
+          # single polygon
+          points = polygons[0].map { |el| "#{el[0]} #{el[1]}"}
+          "POLYGON((#{points.join(", ")}))"
+        elsif polygons.length > 1
+          # multi-polygon
+          wkt_polys = polygons.map {|poly|
+            "((#{poly.map { |el| "#{el[0]} #{el[1]}"}.join(", ")}))"
+          }
+          "MULTIPOLYGON(#{wkt_polys.join(", ")})"
+        end
       end
     end
 

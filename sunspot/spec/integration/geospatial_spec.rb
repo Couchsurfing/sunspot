@@ -64,29 +64,86 @@ describe "geospatial search" do
     end
   end
 
-  describe "filtering by polygon" do
-    before :all do
-      Sunspot.remove_all
+  describe "filtering posts that contain a point" do
+    describe "within a single polygon" do
+      before :all do
+        Sunspot.remove_all
 
-      @post = Post.new(:title       => "Howdy",
-                       :boundary => {:points => [[1,1],[1,7],[3,12],[5,6],[5,4],[1,1]]})
-      Sunspot.index!(@post)
+        @post = Post.new(:title       => "Howdy",
+                         :boundary => {:polygons => [[[1,1],[1,7],[3,12],[5,6],[5,4],[1,1]]]})
+        Sunspot.index!(@post)
+      end
+
+      it "matches post within the polygon" do
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [2, 2]
+        }.results
+
+        results.should include(@post)
+      end
+
+      it "filters out posts not in the polygon" do
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [2, 15]
+        }.results
+
+        results.should_not include(@post)
+      end
     end
 
-    it "matches post within the polygon" do
-      results = Sunspot.search(Post) {
-        with(:boundary).containing_point [2, 2]
-      }.results
+    describe "within a multi-polygon" do
+      before :all do
+        Sunspot.remove_all
 
-      results.should include(@post)
-    end
+        @post = Post.new(:title       => "Howdy",
+                         :boundary => {:polygons => [
+                           [[1,1],[1,7],[3,12],[5,6],[5,4],[1,1]],
+                           [[-1,-1],[-1,-7],[-3,-12],[-5,-6],[-5,-4],[-1,-1]],
+                           [[51,51],[51,57],[53,62],[55,56],[55,54],[51,51]],
 
-    it "filters out posts not in the polygon" do
-      results = Sunspot.search(Post) {
-        with(:boundary).containing_point [2, 15]
-      }.results
+        ]})
+        Sunspot.index!(@post)
+      end
 
-      results.should_not include(@post)
+      it "matches post containing points in either polygon" do
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [2, 2]
+        }.results
+
+        results.should include(@post)
+
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [-2, -2]
+        }.results
+
+        results.should include(@post)
+
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [52, 52]
+        }.results
+
+        results.should include(@post)
+      end
+
+      it "filters out posts not containing points" do
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [2, 15]
+        }.results
+
+        results.should_not include(@post)
+
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [-2, -15]
+        }.results
+
+        results.should_not include(@post)
+
+        results = Sunspot.search(Post) {
+          with(:boundary).containing_point [52, 65]
+        }.results
+
+        results.should_not include(@post)
+      end
     end
   end
 
