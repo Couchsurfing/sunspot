@@ -12,7 +12,7 @@ describe "geospatial search" do
 
     it "matches posts within the radius" do
       results = Sunspot.search(Post) {
-        with(:coordinates_new).in_radius(32, -68, 1)
+        with(:coordinates_solr4).in_radius(32, -68, 1)
       }.results
 
       results.should include(@post)
@@ -20,7 +20,7 @@ describe "geospatial search" do
 
     it "filters out posts not in the radius" do
       results = Sunspot.search(Post) {
-        with(:coordinates_new).in_radius(33, -68, 1)
+        with(:coordinates_solr4).in_radius(33, -68, 1)
       }.results
 
       results.should_not include(@post)
@@ -29,8 +29,8 @@ describe "geospatial search" do
     it "allows conjunction queries" do
       results = Sunspot.search(Post) {
         any_of do
-          with(:coordinates_new).in_radius(32, -68, 1)
-          with(:coordinates_new).in_radius(35, 68, 1)
+          with(:coordinates_solr4).in_radius(32, -68, 1)
+          with(:coordinates_solr4).in_radius(35, 68, 1)
         end
       }.results
 
@@ -49,7 +49,7 @@ describe "geospatial search" do
 
     it "matches post within the bounding box" do
       results = Sunspot.search(Post) {
-        with(:coordinates_new).in_bounding_box [31, -69], [33, -67]
+        with(:coordinates_solr4).in_bounding_box [31, -69], [33, -67]
       }.results
 
       results.should include(@post)
@@ -57,7 +57,7 @@ describe "geospatial search" do
 
     it "filters out posts not in the bounding box" do
       results = Sunspot.search(Post) {
-        with(:coordinates_new).in_bounding_box [20, -70], [21, -69]
+        with(:coordinates_solr4).in_bounding_box [20, -70], [21, -69]
       }.results
 
       results.should_not include(@post)
@@ -171,6 +171,36 @@ describe "geospatial search" do
     it "orders posts by distance descending" do
       results = Sunspot.search(Post) {
         order_by_geodist(:coordinates_new, 32, -68, :desc)
+      }.results
+
+      results.should == @posts
+    end
+  end
+
+  describe "ordering by distance (solr4 spatial recursive tree type)" do
+    before :all do
+      Sunspot.remove_all
+
+      @posts = [
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(34, -68)),
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(33, -68)),
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(32, -68))
+      ]
+
+      Sunspot.index!(@posts)
+    end
+
+    it "orders posts by distance ascending" do
+      results = Sunspot.search(Post) {
+        order_by_distance(:coordinates_solr4, 32, -68)
+      }.results
+
+      results.should == @posts.reverse
+    end
+
+    it "orders posts by distance descending" do
+      results = Sunspot.search(Post) {
+        order_by_distance(:coordinates_solr4, 32, -68, :desc)
       }.results
 
       results.should == @posts

@@ -52,6 +52,20 @@ module Sunspot
         )
       end
 
+      # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
+      def order_by_distance(field_name, lat, lon, direction = nil)
+        obj = OpenStruct.new(field_name: field_name, lat: lat, lon: lon)
+        def obj.to_params
+          {
+            q: "{!geofilt score=distance filter=false pt=#{lat},#{lon} d=10 sfield=#{field_name}_rpt}",
+          }
+        end
+        @query.add_geo(obj)
+        @query.add_sort(
+          Sunspot::Query::Sort::ScoreSort.new(direction)
+        )
+      end
+
       #
       # DEPRECATED Use <code>order_by(:random)</code>
       #

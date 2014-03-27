@@ -57,6 +57,7 @@ Sunspot.setup(Post) do
   location :coordinates
   latlon(:coordinates_new) { coordinates }
   location_rpt :boundary
+  location_rpt(:coordinates_solr4) { coordinates }
 
   dynamic_string :custom_string, :stored => true
   dynamic_float :custom_float, :multiple => true, :using => :custom_fl
