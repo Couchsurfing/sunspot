@@ -381,9 +381,9 @@ module Sunspot
       end
 
       def to_indexed(value)
-        if value.respond_to?(:lat)
+         if value[:point]
           # value is a point
-          "POINT (#{value.lng.to_f} #{value.lat.to_f})"
+          "POINT (#{value[:point][0].to_f} #{value[:point][1].to_f})"
         else
           # value is a polygon
           polygons = value[:polygons]
@@ -399,6 +399,10 @@ module Sunspot
             "MULTIPOLYGON(#{wkt_polys.join(", ")})"
           end
         end
+      end
+
+      def cast(value)
+        value
       end
     end
 
