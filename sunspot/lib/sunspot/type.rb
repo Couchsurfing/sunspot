@@ -383,7 +383,7 @@ module Sunspot
       def to_indexed(value)
         if value.respond_to?(:lat)
           # value is a point
-          "#{value.lat.to_f},#{value.lng.to_f}"
+          "POINT (#{value.lng.to_f} #{value.lat.to_f})"
         else
           # value is a polygon
           polygons = value[:polygons]
