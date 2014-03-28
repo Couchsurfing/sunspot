@@ -47,8 +47,19 @@ module Sunspot
       #   :asc or :desc (default :asc)
       #
       def order_by_geodist(field_name, lat, lon, direction = nil)
+        field = @setup.field(field_name)
+        if field.type.class == Sunspot::Type::LocationRptType
+          obj = Struct.new(:field).new(field)
+          def obj.to_params
+            {
+              sfield: field.indexed_name
+            }
+          end
+
+          @query.add_geo(obj)
+        end
         @query.add_sort(
-          Sunspot::Query::Sort::GeodistSort.new(@setup.field(field_name), lat, lon, direction)
+          Sunspot::Query::Sort::GeodistSort.new(field, lat, lon, direction)
         )
       end
 
