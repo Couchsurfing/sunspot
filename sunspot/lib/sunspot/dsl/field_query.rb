@@ -70,12 +70,11 @@ module Sunspot
         def obj.to_params
           {
             sfield: field.indexed_name,
-            pt: "#{lat} #{lon}"
           }
         end
 
         @query.add_geo(obj)
-        prefix = "{!boost b=recip(geodist(),#{denominator},1000,1000)}"
+        prefix = "{!boost b=recip(geodist(#{lat},#{lon}),#{denominator},1000,1000)}"
         @query.set_q_prefix(prefix)
       end
 
