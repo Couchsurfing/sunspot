@@ -63,6 +63,21 @@ module Sunspot
         )
       end
 
+      # For LocationRptType
+      def boost_by_inverse_of_geodist(field_name, lat, lon, denominator=1)
+        field = @setup.field(field_name)
+        obj = Struct.new(:field, :lat, :lon, :denominator).new(field, lat, lon, denominator)
+        def obj.to_params
+          {
+            sfield: field.indexed_name,
+            q: "{!boost b=recip(geodist(),#{denominator},1000,1000)}*",
+            pt: "#{lat} #{lon}"
+          }
+        end
+
+        @query.add_geo(obj)
+      end
+
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
       def order_by_distance(field_name, lat, lon, direction = nil)
         obj = OpenStruct.new(field_name: field_name, lat: lat, lon: lon)

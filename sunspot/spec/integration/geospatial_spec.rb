@@ -207,6 +207,28 @@ describe "geospatial search" do
     end
   end
 
+  describe "boost by geodist (solr4 spatial recursive tree type)" do
+    before :all do
+      Sunspot.remove_all
+
+      @posts = [
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(34, -68)),
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(33, -68)),
+        Post.new(:title => "Howdy", :coordinates => Sunspot::Util::Coordinates.new(32, -68))
+      ]
+
+      Sunspot.index!(@posts)
+    end
+
+    it "when all else is equal, orders posts by distance ascending" do
+      results = Sunspot.search(Post) {
+        boost_by_inverse_of_geodist(:coordinates_solr4, 32, -68)
+      }.results
+
+      results.should == @posts.reverse
+    end
+  end
+
   describe "ordering by distance using geofilt (solr4 spatial recursive tree type)" do
     before :all do
       Sunspot.remove_all
