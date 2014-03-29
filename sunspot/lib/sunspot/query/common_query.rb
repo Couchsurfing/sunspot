@@ -70,6 +70,7 @@ module Sunspot
         end
         @parameter_adjustment.call(params) if @parameter_adjustment
         params[:q] ||= '*:*'
+        params[:q] = "#{@q_prefix}#{params[:q]}"
         params
       end
 
@@ -85,6 +86,9 @@ module Sunspot
         @pagination.per_page if @pagination
       end
 
+      def set_q_prefix(prefix)
+        @q_prefix = prefix
+      end
 
       private
 

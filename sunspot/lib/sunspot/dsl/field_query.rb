@@ -70,12 +70,13 @@ module Sunspot
         def obj.to_params
           {
             sfield: field.indexed_name,
-            q: "{!boost b=recip(geodist(),#{denominator},1000,1000)}*",
             pt: "#{lat} #{lon}"
           }
         end
 
         @query.add_geo(obj)
+        prefix = "{!boost b=recip(geodist(),#{denominator},1000,1000)}"
+        @query.set_q_prefix(prefix)
       end
 
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
