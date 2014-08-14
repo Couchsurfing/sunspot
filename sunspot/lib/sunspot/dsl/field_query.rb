@@ -84,7 +84,6 @@ module Sunspot
         p obj
         p @query
         @query.add_geo(obj)
-        binding.pry
       end
 
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
