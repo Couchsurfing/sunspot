@@ -73,12 +73,15 @@ module Sunspot
             boost: "recip(geodist(#{lat},#{lon}),#{denominator},1000,1000)",
             defType: "edismax" # this query format is specific to edismax
             if max_radius
+              puts "max radius"
               q: "{!geofilt pt=#{lat},#{lon} sfield=geo d=#{max_radius}}"
             end
           }
         end
 
+        p obj
         @query.add_geo(obj)
+        p @query
       end
 
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
