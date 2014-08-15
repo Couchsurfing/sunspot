@@ -165,14 +165,13 @@ module Sunspot
       end
 
       def in_polygon(polygon)
-        obj = OpenStruct.new(field: @field, polygon: polygon)
-        @poly = ""
-        polygon.each do |set|
-          @poly = @poly + "#{set[0]} #{set[1]}" + ", "
-        end
-        @poly = @poly[0..-3]
+        obj = OpenStruct.new(field: @field, polygon: polygon, poly: "")
         def obj.to_params
-          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON((#{@poly}))) distErrPct=0"}}
+          polygon.each do |set|
+            poly = poly + "#{set[0]} #{set[1]}" + ", "
+          end
+          poly = poly[0..-3]
+          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON((#{poly}))) distErrPct=0"}}
         end
         @query.add_geo(obj)
       end
