@@ -143,6 +143,7 @@ module Sunspot
       end
 
       def in_rpt_radius(lat, lon, radius, options = {})
+        # Radius is in KM, 100000/1 ratio may be a bit off due to mercator distortion.
         adjusted_radius = (radius*100000.0 * (1 / Math.cos(lat / 180.0 * Math::PI)))
         factory = RGeo::Geographic.simple_mercator_factory(buffer_resolution: 4)
         projected_point = factory.project(factory.point(lon, lat))
@@ -161,6 +162,19 @@ module Sunspot
       #
       def in_bounding_box(first_corner, second_corner)
         @query.add_geo(Sunspot::Query::Bbox.new(@field, first_corner, second_corner))
+      end
+
+      def in_polygon(polygon)
+        obj = OpenStruct.new(field: @field, polygon: polygon)
+        poly = ""
+        polygon.boundaries.each do |set|
+          poly = poly + "#{set[0]} #{set[1]}" + ", "
+        end
+        poly = poly[0..-3]
+        def obj.to_params
+          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON(((#{poly}))"}}
+        end
+        @query.add_geo(obj)
       end
 
       def containing_point(point)
