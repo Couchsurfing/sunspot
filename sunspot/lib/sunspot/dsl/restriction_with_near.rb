@@ -171,7 +171,8 @@ module Sunspot
           factory = RGeo::Geographic.simple_mercator_factory(buffer_resolution: 4)
           poly = ""
           polygon.each do |set|
-            projected_point = factory.project(factory.point(set[0], set[1]))
+            # We get lon/lat so swap in order to retain logic from other projection code
+            projected_point = factory.project(factory.point(set[1], set[0]))
             poly = poly + "#{projected_point.y} #{projected_point.x}" + ", "
           end
           poly = poly[0..-3]
