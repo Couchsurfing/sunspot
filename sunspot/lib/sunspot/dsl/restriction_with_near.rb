@@ -167,6 +167,8 @@ module Sunspot
       def in_polygon(polygon)
         obj = OpenStruct.new(field: @field, polygon: polygon, poly: "")
         def obj.to_params
+          puts "Poly is #{poly}"
+          puts "Polygon is #{polygon}"
           polygon.each do |set|
             poly = poly + "#{set[0]} #{set[1]}" + ", "
           end
