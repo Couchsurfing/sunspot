@@ -142,6 +142,12 @@ module Sunspot
         @query.add_geo(Sunspot::Query::Geofilt.new(@field, lat, lon, radius, options))
       end
 
+      def in_rpt_radius(lat, lon, radius, options = {})
+        factory = RGeo::Geographic.simple_mercator_factory(buffer_resolution: 4)
+        projected_point = factory.project(factory.point(lon, lat))
+        @query.add_geo(Sunspot::Query::Geofilt.new(@field, projected_point.y, projected_point.x, radius, options))
+      end
+
       #
       # Performs a query that is filtered by a bounding box
       #

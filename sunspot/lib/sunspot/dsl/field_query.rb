@@ -64,25 +64,17 @@ module Sunspot
       end
 
       # For LocationRptType
-      def boost_by_inverse_of_geodist(field_name, lat, lon, denominator=1, max_radius=nil)
-        puts "max radius is #{max_radius}"
+      def boost_by_inverse_of_geodist(field_name, lat, lon, denominator=1)
         field = @setup.field(field_name)
-        obj = Struct.new(:field, :lat, :lon, :denominator, :max_radius).new(field, lat, lon, denominator, max_radius)
+        obj = Struct.new(:field, :lat, :lon, :denominator).new(field, lat, lon, denominator)
         def obj.to_params
-          params = {
+          {
             sfield: field.indexed_name,
             boost: "recip(geodist(#{lat},#{lon}),#{denominator},1000,1000)",
             defType: "edismax" # this query format is specific to edismax
           }
-          if max_radius
-            puts "max radius"
-            params.merge({q: "{!geofilt pt=#{lat},#{lon} sfield=geo d=#{max_radius}}"})
-          end
-          params
         end
 
-        p obj
-        p @query
         @query.add_geo(obj)
       end
 
