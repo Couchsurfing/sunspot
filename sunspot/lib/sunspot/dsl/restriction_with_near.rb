@@ -172,7 +172,7 @@ module Sunspot
         end
         @poly = @poly[0..-3]
         def obj.to_params
-          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON(((#{@poly}))"}}
+          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON((#{@poly}))) distErrPct=0"}}
         end
         @query.add_geo(obj)
       end
