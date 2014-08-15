@@ -167,7 +167,7 @@ module Sunspot
       def in_polygon(polygon)
         obj = OpenStruct.new(field: @field, polygon: polygon)
         poly = ""
-        polygon.boundaries.each do |set|
+        polygon.each do |set|
           poly = poly + "#{set[0]} #{set[1]}" + ", "
         end
         poly = poly[0..-3]
