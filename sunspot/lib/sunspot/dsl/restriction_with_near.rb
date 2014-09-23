@@ -183,7 +183,7 @@ module Sunspot
       def containing_point(point)
         obj = OpenStruct.new(field: @field, point: point)
         def obj.to_params
-          {fq: %Q{#{field.indexed_name}:"Intersects(#{point[0]} #{point[1]})"}}
+          {fq: %Q{#{field.indexed_name}:"Contains(#{point[0]} #{point[1]})"}}
         end
         @query.add_geo(obj)
       end
