@@ -406,6 +406,21 @@ module Sunspot
       end
     end
 
+    class LocationPolygon < AbstractType
+      def indexed_name(name)
+        "#{name}_rpt"
+      end
+
+      # Accepts pure solr spatial text like POLYGON((12,-12....))
+      def to_indexed(value)
+        value
+      end
+
+      def cast(value)
+        value
+      end
+    end
+
     class ClassType < AbstractType
       def indexed_name(name) #:nodoc:
         'class_name'
