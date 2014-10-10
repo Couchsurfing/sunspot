@@ -81,11 +81,11 @@ module Sunspot
       # Custom Host Boosting code
       def boost_host
         field = @setup.field(:last_couch_visit)
-        obj = Struct.new(:field, Time.now.utc).new(field, now)
+        obj = Struct.new(:field).new(field)
         def obj.to_params
           {
             sfield: field.indexed_name,
-            boost: "recip(ms(last_couch_visit_d,3.16e-11,1,1)",
+            boost: "recip(ms(last_couch_visit_d, NOW,3.16e-11,1,1)",
             defType: "edismax" # this query format is specific to edismax
           }
         end
