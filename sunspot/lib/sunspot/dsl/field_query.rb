@@ -89,6 +89,7 @@ module Sunspot
             defType: "edismax" # this query format is specific to edismax
           }
         end
+        @query.add_geo(obj)
 
       end
 
