@@ -85,7 +85,7 @@ module Sunspot
         def obj.to_params
           {
             sfield: field.indexed_name,
-            boost: "recip(ms(last_couch_visit_i, NOW,3.16e-11,1,1)",
+            boost: "recip(ms(last_couch_visit_i, NOW),3.16e-11,1,1)",
             defType: "edismax" # this query format is specific to edismax
           }
         end
