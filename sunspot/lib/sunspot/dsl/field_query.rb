@@ -78,6 +78,20 @@ module Sunspot
         @query.add_geo(obj)
       end
 
+      # Custom Host Boosting code
+      def boost_host
+        field = @setup.field(:last_couch_visit)
+        obj = Struct.new(:field, Time.now.utc).new(field, now)
+        def obj.to_params
+          {
+            sfield: field.indexed_name,
+            boost: "recip(ms(last_couch_visit_d,3.16e-11,1,1)",
+            defType: "edismax" # this query format is specific to edismax
+          }
+        end
+
+      end
+
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
       def order_by_distance(field_name, lat, lon, direction = nil)
         obj = OpenStruct.new(field_name: field_name, lat: lat, lon: lon)
