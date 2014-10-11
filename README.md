@@ -615,6 +615,16 @@ Post.search do
 end
 ```
 
+#### Using Spatial Recursive Prefix Tree
+# The last option is the radius diameter in KM but will need to be corrected for latitude depending on your projection.
+# containing_point is self explanatory.
+
+```ruby
+Post.search do
+  with(:location).in_rpt_radius(32, -127, 42)
+  with(:location).containing_point([32, -127])
+end
+
 #### Sort By Distance
 
 ```ruby
