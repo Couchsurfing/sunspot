@@ -88,7 +88,7 @@ module Sunspot
             #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),host_score_i)",
             #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000), scale(map(host_score_i,0,0,5), 1,2))",
             #boost: "product(scale(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),1,100),scale(abs(host_score_i),1,10))",
-            boost: "product(sum(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),ord(last_couch_visit_i)),product(abs(host_score_i),5))",
+            boost: "sum(sum(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),ord(last_couch_visit_i)),abs(host_score_i))",
             defType: "edismax" # this query format is specific to edismax
           }
         end
