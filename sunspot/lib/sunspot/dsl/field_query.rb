@@ -87,9 +87,7 @@ module Sunspot
             sfield: field.indexed_name,
             #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),host_score_i)",
             #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000), scale(map(host_score_i,0,0,5), 1,2))",
-            #boost: "product(scale(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),1,100),scale(map(abs(host_score_i),0,0,5), 1,100))",
-            boost: "product(host_score_f, 1000)",
-            #boost: "scale(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),1,100)",
+            boost: "product(scale(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),1,100),scale(abs(host_score_i),1,100))",
             defType: "edismax" # this query format is specific to edismax
           }
         end
