@@ -85,10 +85,7 @@ module Sunspot
         def obj.to_params
           {
             sfield: field.indexed_name,
-            #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),host_score_i)",
-            #boost: "product(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000), scale(map(host_score_i,0,0,5), 1,2))",
-            #boost: "product(scale(recip(sum(geodist(#{lat},#{lon}),scale(rord(last_couch_visit_i),7,1)),#{denominator},1000,1000),1,100),scale(abs(host_score_i),1,10))",
-            boost: "sum(scale(sum(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),ord(last_couch_visit_i)),0,100),scale(abs(host_score_i),0,5))",
+            boost: "sum(scale(sum(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),ord(last_couch_visit_i)),1,100),scale(abs(host_score_i),1,5))",
             defType: "edismax" # this query format is specific to edismax
           }
         end
@@ -96,20 +93,20 @@ module Sunspot
         @query.add_geo(obj)
       end
 
-      # Custom Host Boosting code
-      def boost_host
-        field = @setup.field(:last_couch_visit)
-        obj = Struct.new(:field).new(field)
+      def boost_comment_thread_by_inverse_of_geodist(field_name, lat, lon, denominator=1)
+        field = @setup.field(field_name)
+        obj = Struct.new(:field, :lat, :lon, :denominator).new(field, lat, lon, denominator)
         def obj.to_params
           {
             sfield: field.indexed_name,
-            boost: "recip(ms(last_couch_visit_i, NOW),3.16e-11,1,1)",
+            boost: "sum(scale(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),1,100),scale(ord(updated_at_i)),1,100)",
             defType: "edismax" # this query format is specific to edismax
           }
         end
-        @boost_functions << obj
 
+        @query.add_geo(obj)
       end
+
       # Similar to order_by_geodist but for Solr4 spatial recursive tree (RPT) fields
       def order_by_distance(field_name, lat, lon, direction = nil)
         obj = OpenStruct.new(field_name: field_name, lat: lat, lon: lon)
