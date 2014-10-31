@@ -147,7 +147,7 @@ module Sunspot
         adjusted_radius = (radius*100000.0 * (1 / Math.cos(lat / 180.0 * Math::PI)))
         factory = RGeo::Geographic.simple_mercator_factory(buffer_resolution: 4)
         projected_point = factory.project(factory.point(lon, lat))
-        @query.add_geo(Sunspot::Query::Geofilt.new(@field, projected_point.y, projected_point.x, adjusted_radius, options))
+        @parameter_adjustment = " AND #{Sunspot::Query::Geofilt.new(@field, projected_point.y, projected_point.x, adjusted_radius, options)}"
       end
 
       #
