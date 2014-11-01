@@ -85,7 +85,7 @@ module Sunspot
         def obj.to_params
           {
             sfield: field.indexed_name,
-            boost: "sum(scale(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),1,200),scale(abs(host_score_i),1,5))",
+            boost: "sum(scale(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),1,200),scale(host_score_i,1,20))",
             defType: "edismax" # this query format is specific to edismax
           }
         end
