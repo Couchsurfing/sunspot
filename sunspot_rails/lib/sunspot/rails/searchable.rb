@@ -88,10 +88,10 @@ module Sunspot #:nodoc:
 
             class_attribute :sunspot_options
 
-            unless options[:auto_index] == false
-              before_save :mark_for_auto_indexing_or_removal
-              after_save :perform_index_tasks
-            end
+            # unless options[:auto_index] == false
+            #   before_save :mark_for_auto_indexing_or_removal
+            #   after_save :perform_index_tasks
+            # end
 
             unless options[:auto_remove] == false
               after_destroy do |searchable|
