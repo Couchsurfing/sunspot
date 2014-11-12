@@ -81,7 +81,7 @@ module Sunspot
       # For LocationRptType
       def boost_custom_by_inverse_of_geodist(field_name, boost_string)
         field = @setup.field(field_name)
-        obj = Struct.new(:field, :boost_string).new(field, lat, lon, boost_string, denominator)
+        obj = Struct.new(:field, :boost_string).new(field, boost_string)
         def obj.to_params
           {
             sfield: field.indexed_name,
