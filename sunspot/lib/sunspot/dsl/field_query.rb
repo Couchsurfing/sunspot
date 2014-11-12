@@ -79,27 +79,13 @@ module Sunspot
       end
 
       # For LocationRptType
-      def boost_host_by_inverse_of_geodist(field_name, lat, lon, boost_string, denominator=1)
+      def boost_custom_by_inverse_of_geodist(field_name, boost_string)
         field = @setup.field(field_name)
-        obj = Struct.new(:field, :lat, :lon, :boost_string, :denominator).new(field, lat, lon, boost_string, denominator)
+        obj = Struct.new(:field, :boost_string).new(field, lat, lon, boost_string, denominator)
         def obj.to_params
           {
             sfield: field.indexed_name,
             boost: boost_string,
-            defType: "edismax" # this query format is specific to edismax
-          }
-        end
-
-        @query.add_geo(obj)
-      end
-
-      def boost_comment_thread_by_inverse_of_geodist(field_name, lat, lon, denominator=1)
-        field = @setup.field(field_name)
-        obj = Struct.new(:field, :lat, :lon, :denominator).new(field, lat, lon, denominator)
-        def obj.to_params
-          {
-            sfield: field.indexed_name,
-            boost: "sum(scale(recip(geodist(#{lat},#{lon}),#{denominator},1000,1000),1,100),scale(ord(updated_at_i),1,200))",
             defType: "edismax" # this query format is specific to edismax
           }
         end
