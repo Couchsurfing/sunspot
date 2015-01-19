@@ -175,7 +175,7 @@ module Sunspot
             poly = poly + "#{projected_point.y} #{projected_point.x}" + ", "
           end
           poly = poly[0..-3]
-          {fq: %Q{#{field.indexed_name}:"IsWithin(MULTIPOLYGON((#{poly}))) distErrPct=0"}}
+          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON((#{poly}))) distErrPct=0"}}
         end
         @query.add_geo(obj)
       end
