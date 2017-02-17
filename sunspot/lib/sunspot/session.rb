@@ -227,6 +227,10 @@ module Sunspot
       indexer.flush_batch
     end
 
+    def add_connection_header(headers)
+      connection.update headers: headers
+    end
+
     private
 
     # 
