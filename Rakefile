@@ -1,3 +1,14 @@
+require 'rake/clean'
+require 'rake/file_list'
+
+TO_CLEAN = Rake::FileList.new do |fl|
+  fl.include 'sunspot_rails/tmp/**/*', 'sunspot/vendor/**/*'
+  fl.include '**/.bundle'
+  fl.exclude 'sunspot_rails/tmp/.gitkeep'
+end
+
+CLEAN.include TO_CLEAN
+
 desc 'Release Sunspot, Sunspot::Rails and Sunspot::Solr to Rubygems.org'
 task :release do
   FileUtils.cp('README.md', 'sunspot/')
@@ -44,5 +55,8 @@ task :default do
                 "GEM=sunspot_rails RAILS=3.0.0 ci/travis.sh",
                 "GEM=sunspot_rails RAILS=3.1.0 ci/travis.sh",
                 "GEM=sunspot_rails RAILS=3.2.0 ci/travis.sh",
-                "GEM=sunspot_rails RAILS=4.0.0 ci/travis.sh" ].join(" && ")) ? 0 : 1
+                "GEM=sunspot_rails RAILS=4.0.0 ci/travis.sh",
+                "GEM=sunspot_rails RAILS=4.1.0 ci/travis.sh",
+                "GEM=sunspot_rails RAILS=4.2.0 ci/travis.sh",
+                "GEM=sunspot_rails RAILS=5.0 ci/travis.sh"].join(" && ")) ? 0 : 1
 end

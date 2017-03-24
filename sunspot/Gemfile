@@ -9,3 +9,4 @@ group :development do
 end
 
 gem 'pry-plus', groups: [:test, :development]
+gem 'rsolr', ENV['RSOLR'] if ENV['RSOLR']

@@ -1,7 +1,7 @@
 # Sunspot
 
-[![Gem Version](https://badge.fury.io/rb/sunspot.png)](http://badge.fury.io/rb/sunspot)
-[![Build Status](https://secure.travis-ci.org/sunspot/sunspot.png)](http://travis-ci.org/sunspot/sunspot)
+[![Gem Version](https://badge.fury.io/rb/sunspot.svg)](http://badge.fury.io/rb/sunspot)
+[![Build Status](https://secure.travis-ci.org/sunspot/sunspot.png?branch=master)](http://travis-ci.org/sunspot/sunspot)
 
 Sunspot is a Ruby library for expressive, powerful interaction with the Solr
 search engine. Sunspot is built on top of the RSolr library, which
@@ -19,6 +19,9 @@ reference](http://sunspot.github.com/sunspot/docs/).
 For questions about how to use Sunspot in your app, please use the
 [Sunspot Mailing List](http://groups.google.com/group/ruby-sunspot) or search
 [Stack Overflow](http://www.stackoverflow.com).
+
+## Looking for maintainers
+This project is looking for maintainers. An ideal candidate would be someone on a team whose app makes heavy use of the Sunspot gem. If you think you're a good fit, send a message to contact@culturecode.ca.
 
 ## Quickstart with Rails 3 / 4
 
@@ -86,6 +89,7 @@ Post.search do
 
   with :blog_id, 1
   with(:published_at).less_than Time.now
+  field_list :blog_id, :title
   order_by :published_at, :desc
   paginate :page => 2, :per_page => 15
   facet :category_ids, :author_id
@@ -239,6 +243,20 @@ Post.search do
 end
 ```
 
+#### Restrictions and Field List
+
+```ruby
+# Posts with a blog_id of 1
+Post.search do
+  with(:blog_id, 1)
+  field_list [:title]
+end
+
+Post.search do
+  without(:category_ids, [1, 3])
+  field_list [:title, :author_id]
+end
+```
 
 #### Disjunctions and Conjunctions
 
@@ -263,7 +281,7 @@ end
 ```
 
 ```ruby
-# Posts with blog_id 1 and author_id 2
+# Posts scoring with any of the two fields.
 Post.search do
   any do
     fulltext "keyword1", :fields => :title
@@ -283,7 +301,7 @@ Post.search do
       with(:category_ids, 3)
     end
   end
-  
+
   any do
     all do
       fulltext "keyword", :fields => :title
@@ -377,6 +395,11 @@ end
 #### Cursor-based pagination
 
 **Solr 4.7 and above**
+
+With default Solr pagination it may turn that same records appear on different pages (e.g. if
+many records have the same search score). Cursor-based pagination allows to avoid this.
+
+Useful for any kinds of export, infinite scroll, etc.
 
 Cursor for the first page is "*".
 ```ruby
@@ -633,6 +656,59 @@ Post.search do
 end
 ```
 
+#### Grouping by Queries
+It is also possible to group by arbitrary queries instead of on a
+specific field, much like using query facets instead of field facets.
+For example, we can group by average rating.
+
+```ruby
+# Returns the top post for each range of average ratings
+search = Post.search do
+  group do
+    query("1.0 to 2.0") do
+      with(:average_rating, 1.0..2.0)
+    end
+    query("2.0 to 3.0") do
+      with(:average_rating, 2.0..3.0)
+    end
+    query("3.0 to 4.0") do
+      with(:average_rating, 3.0..4.0)
+    end
+    query("4.0 to 5.0") do
+      with(:average_rating, 4.0..5.0)
+    end
+  end
+end
+
+search.group(:queries).matches # Total number of matches to the queries
+
+search.group(:queries).groups.each do |group|
+  puts group.value # The argument to query - "1.0 to 2.0", for example
+
+  group.results.each do |result|
+    # ...
+  end
+end
+```
+
+This can also be used to query multivalued fields, allowing a single
+item to be in multiple groups.
+
+```ruby
+# This finds the top 10 posts for each category in category_ids.
+search = Post.search do
+  group do
+    limit 10
+
+    category_ids.each do |category_id|
+      query category_id do
+        with(:category_id, category_id)
+      end
+    end
+  end
+end
+```
+
 ### Geospatial
 
 **Sunspot 2.0 only**
@@ -726,8 +802,8 @@ end
 
 PhotoContainer.search do
   with(:caption, 'blah')
-  with(:photos_created).between(Date.new(2011,3,1), Date.new(2011,4,1))
-  
+  with(:photos_created).between(Date.new(2011,3,1)..Date.new(2011,4,1))
+
   fulltext("keywords", :fields => [:name, :description])
 end
 
@@ -735,8 +811,8 @@ end
 
 PhotoContainer.search do
   with(:caption, 'blah')
-  with(:photos_created).between(Date.new(2011,3,1), Date.new(2011,4,1))
-  
+  with(:photos_created).between(Date.new(2011,3,1)..Date.new(2011,4,1))
+
   any do
     fulltext("keyword1", :fields => :name)
     fulltext("keyword2", :fields => :description) # will be joined from the Photo model
@@ -774,7 +850,7 @@ Profile.search do
     fulltext("keyword1 keyword2", :fields => [:tweet_keywords]) do
       minimum_match 1
     end
-    
+
     fulltext("keyword3", :fields => [:rss_keywords])
   end
 end
@@ -884,7 +960,48 @@ end
 
 ### Functions
 
-TODO
+Functions in Solr make it possible to dynamically compute values for each document. This gives you more flexability and you don't have to only deal with static values. For more details, please read [Fuction Query documentation](http://wiki.apache.org/solr/FunctionQuery).
+
+Sunspot supports functions in two ways:
+
+1. You can use functions to dynamically count boosting for field:
+
+```ruby
+#Posts with pizza, scored higher (square promotion field) if is_promoted
+Post.search do
+  fulltext 'pizza' do
+    boost(function {sqrt(:promotion)}) { with(:is_promoted, true) }
+  end
+end
+```
+
+2. You're able to use functions for ordering (see examples for [order_by_function](#ordering))
+
+
+### Atomic updates
+
+Atomic Updates is a feature in Solr 4.0 that allows you to update on a field level rather than on a document level. This means that you can update individual fields without having to send the entire document to Solr with the un-updated fields values. For more details, please read [Atomic Update documentation](https://wiki.apache.org/solr/Atomic_Updates).
+
+All fields of the model must be **stored**, otherwise non-stored values will be lost after an update.
+
+```ruby
+class Post < ActiveRecord::Base
+  searchable do
+    # all fields stored
+    text :body, :stored => true
+    string :title, :stored => true
+  end
+end
+
+post1 = Post.create #...
+post2 = Post.create #...
+
+# atomic update on class level
+Post.atomic_update post1.id => {title: 'A New Title'}, post2.id => {body: 'A New Body'}
+
+# atomic update on instance level
+post1.atomic_update body: 'A New Body', title: 'Another New Title'
+```
 
 ### More Like This
 
@@ -915,7 +1032,7 @@ results = Sunspot.more_like_this(post) do
 end
 ```
 
-To use more_like_this you need to have the [MoreLikeThis handler enabled in solrcofig.xml](http://wiki.apache.org/solr/MoreLikeThisHandler).
+To use more_like_this you need to have the [MoreLikeThis handler enabled in solrconfig.xml](http://wiki.apache.org/solr/MoreLikeThisHandler).
 
 Example handler will look like this:
 
@@ -927,6 +1044,78 @@ Example handler will look like this:
   </lst>
 </requestHandler>
 ```
+
+### Spellcheck
+
+Solr supports spellchecking of search results against a
+dictionary. Sunspot supports turning on the spellchecker via the query
+DSL and parsing the response. Read the
+[solr docs](http://wiki.apache.org/solr/SpellCheckComponent) for more
+information on how this all works inside Solr.
+
+Solr's default spellchecking engine expects to use a dictionary
+comprised of values from an indexed field. This tends to work better
+than a static dictionary file, since it includes proper nouns in your
+index. The default in sunspot's `solrconfig.xml` is `textSpell` (note
+that `buildOnCommit` isn't recommended in production):
+
+    <lst name="spellchecker">
+       <str name="name">default</str>
+       <!-- change field to textSpell and use copyField in schema.xml
+       to spellcheck multiple fields -->
+       <str name="field">textSpell</str>
+       <str name="buildOnCommit">true</str>
+     </lst>
+
+Define the `textSpell` field in your `schema.xml`.
+
+    <field name="textSpell" stored="false" type="textSpell" multiValued="true" indexed="true"/>
+
+To get some data into your spellchecking field, you can use `copyField` in `schema.xml`:
+
+    <copyField source="*_text"  dest="textSpell" />
+    <copyField source="*_s"  dest="textSpell" />
+
+`copyField` works *before* any analyzers you have set up on the source
+fields. You can add your own analyzer by customizing the `textSpell` field type in `schema.xml`:
+
+    <fieldType name="textSpell" class="solr.TextField" positionIncrementGap="100" omitNorms="true">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StandardFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+It's dangerous to add too much to this analyzer chain. It runs before
+words are inserted into the spellcheck dictionary, which means the
+suggestions that come back from solr are post-analyzer. With the
+default above, that means all spelling suggestions will be lower-case.
+
+Once you have solr configured, you can turn it on for a given query
+using the query DSL (see spellcheck_spec.rb for more examples):
+
+    search = Sunspot.search(Post) do
+      keywords 'Cofee'
+      spellcheck :count => 3
+    end
+
+Access the suggestions via the `spellcheck_suggestions` or
+`spellcheck_suggestion_for` (for just the top one) methods:
+
+    search.spellcheck_suggestion_for('cofee') # => 'coffee'
+
+    search.spellcheck_suggestions # => [{word: 'coffee', freq: 10}, {word: 'toffee', freq: 1}]
+
+If you've turned on [collation](http://wiki.apache.org/solr/SpellCheckComponent#spellcheck.collate),
+you can also get that result:
+
+    search = Sunspot.search(Post) do
+      keywords 'Cofee market'
+      spellcheck :count => 3
+    end
+
+    search.spellcheck_collation # => 'coffee market'
 
 ## Indexes In Depth
 
@@ -1015,12 +1204,12 @@ There are a number of ways to index manually within Ruby:
 ```ruby
 # On a class itself
 Person.reindex
-Sunspot.commit
+Sunspot.commit # or commit(true) for a soft commit (Solr4)
 
 # On mixed objects
 Sunspot.index [post1, item2]
 Sunspot.index person3
-Sunspot.commit
+Sunspot.commit # or commit(true) for a soft commit (Solr4)
 
 # With autocommit
 Sunspot.index! [post1, item2, person3]
@@ -1030,13 +1219,13 @@ If you make a change to the object's "schema" (code in the `searchable` block),
 you must reindex all objects so the changes are reflected in Solr:
 
 ```bash
-bundle exec rake sunspot:solr:reindex
+bundle exec rake sunspot:reindex
 
 # or, to be specific to a certain model with a certain batch size:
-bundle exec rake sunspot:solr:reindex[500,Post] # some shells will require escaping [ with \[ and ] with \]
+bundle exec rake sunspot:reindex[500,Post] # some shells will require escaping [ with \[ and ] with \]
 
 # to skip the prompt asking you if you want to proceed with the reindexing:
-bundle exec rake sunspot:solr:reindex[,,true] # some shells will require escaping [ with \[ and ] with \]
+bundle exec rake sunspot:reindex[,,true] # some shells will require escaping [ with \[ and ] with \]
 ```
 
 ## Use Without Rails
@@ -1051,6 +1240,12 @@ environment (such as sidekiq), you should configure Sunspot to use the
 
 ```ruby
 Sunspot.session = Sunspot::SessionProxy::ThreadLocalSessionProxy.new
+```
+
+Within a Rails app, to ensure your `config/sunspot.yml` settings are properly setup in this session you can use  [Sunspot::Rails.build_session](http://sunspot.github.io/sunspot/docs/Sunspot/Rails.html#build_session-class_method) to mirror the normal Sunspot setup process:
+```ruby
+  session = Sunspot::Rails.build_session  Sunspot::Rails::Configuration.new
+  Sunspot.session = session
 ```
 
 ## Manually Adjusting Solr Parameters
@@ -1070,8 +1265,18 @@ end
 TODO
 
 ## Type Reference
-
-TODO
+The following FieldTypes are used in sunspot. sunspot_solr will create schema.xml file inside Project for FieldType reference.
+* [Boolean](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/BoolField.html)
+* [SortableFloat](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/SortableFloatField.html)
+* [Date](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/DateField.html)
+* [SortableInt](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/SortableIntField.html)
+* [String](http://lucene.apache.org/core/4_4_0/core/org/apache/lucene/document/StringField.html)
+* [SortableDouble](http://lucene.apache.org/solr/4_5_1/solr-core/org/apache/solr/schema/SortableDoubleField.html)
+* [SortableLong](http://lucene.apache.org/solr/4_5_1/solr-core/org/apache/solr/schema/SortableLongField.html)
+* [TrieInteger](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/TrieIntField.html)
+* [TrieFloat](https://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/TrieFloatField.html)
+* [TrieInt](https://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/TrieIntField.html)
+* [LatlonField](http://lucene.apache.org/solr/4_4_0/solr-core/org/apache/solr/schema/LatLonType.html)
 
 ## Configuration
 
@@ -1189,8 +1394,6 @@ $ yardoc -o docs */lib/**/*.rb - README.md
 * [Using Sunspot, Websolr, and Solr on Heroku](http://mrdanadams.com/2012/sunspot-websolr-solr-heroku/) (mrdanadams)
 * [Full Text Searching with Solr and Sunspot](http://collectiveidea.com/blog/archives/2011/03/08/full-text-searching-with-solr-and-sunspot/) (Collective Idea)
 * [Full-text search in Rails with Sunspot](http://tech.favoritemedium.com/2010/01/full-text-search-in-rails-with-sunspot.html) (Tropical Software Observations)
-* [Sunspot Full-text Search for Rails/Ruby](http://therailworld.com/posts/23-Sunspot-Full-text-Search-for-Rails-Ruby) (The Rail World)
-* [A Few Sunspot Tips](http://blog.trydionel.com/2009/11/19/a-few-sunspot-tips/) (spiral_code)
 * [Sunspot: A Solr-Powered Search Engine for Ruby](http://www.linux-mag.com/id/7341) (Linux Magazine)
 * [Sunspot Showed Me the Light](http://bennyfreshness.com/2010/05/sunspot-helped-me-see-the-light/) (ben koonse)
 * [RubyGems.org — A case study in upgrading to full-text search](http://blog.websolr.com/post/3505903537/rubygems-search-upgrade-1) (Websolr)
@@ -1201,15 +1404,9 @@ $ yardoc -o docs */lib/**/*.rb - README.md
 * [How to get full text search working with Sunspot](http://cookbook.hobocentral.net/recipes/57-how-to-get-full-text-search) (Hobo Cookbook)
 * [Full text search with Sunspot in Rails](http://web.archive.org/web/20120311015358/http://hemju.com/2011/01/04/full-text-search-with-sunspot-in-rails/) (hemju)
 * [Using Sunspot for Free-Text Search with Redis](http://masonoise.wordpress.com/2010/02/06/using-sunspot-for-free-text-search-with-redis/) (While I Pondered...)
-* [Fuzzy searching in SOLR with Sunspot](http://www.pipetodevnull.com/past/2010/8/5/fuzzy_searching_in_solr_with_sunspot/) (pipe :to => /dev/null)
 * [Default scope with Sunspot](http://www.cloudspace.com/blog/2010/01/15/default-scope-with-sunspot/) (Cloudspace)
 * [Index External Models with Sunspot/Solr](http://www.medihack.org/2011/03/19/index-external-models-with-sunspotsolr/) (Medihack)
 * [Testing with Sunspot and Cucumber](http://collectiveidea.com/blog/archives/2011/05/25/testing-with-sunspot-and-cucumber/) (Collective Idea)
-* [Cucumber and Sunspot](http://opensoul.org/2010/4/7/cucumber-and-sunspot) (opensoul.org)
-* [Testing Sunspot with Cucumber](http://blog.trydionel.com/2010/02/06/testing-sunspot-with-cucumber/) (spiral_code)
-* [Running cucumber features with sunspot_rails](http://blog.kabisa.nl/2010/02/03/running-cucumber-features-with-sunspot_rails) (Kabisa Blog)
-* [Testing Sunspot with Test::Unit](http://timcowlishaw.co.uk/post/3179661158/testing-sunspot-with-test-unit) (Type Slowly)
-* [Sunspot Quickstart](http://wiki.websolr.com/guides/Sunspot-Quick-Start) (WebSolr)
 * [Solr, and Sunspot](http://www.kuahyeow.com/2009/08/solr-and-sunspot.html) (YT!)
 * [The Saga of the Switch](http://web.archive.org/web/20100427135335/http://mrb.github.com/2010/04/08/the-saga-of-the-switch.html) (mrb -- includes comparison of Sunspot and Ultrasphinx)
 * [Conditional Indexing with Sunspot](http://mikepackdev.com/blog_posts/19-conditional-indexing-with-sunspot) (mikepack)

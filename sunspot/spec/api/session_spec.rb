@@ -35,6 +35,26 @@ shared_examples_for 'all sessions' do
     end
   end
 
+  context '#commit(bool)' do
+    it 'should soft-commit if bool=true' do
+      @session.commit(true)
+      connection.should have(1).commits
+      connection.should have(1).soft_commits
+    end
+
+    it 'should hard-commit if bool=false' do
+      @session.commit(false)
+      connection.should have(1).commits
+      connection.should have(0).soft_commits
+    end
+
+    it 'should hard-commit if bool is not specified' do
+      @session.commit
+      connection.should have(1).commits
+      connection.should have(0).soft_commits
+    end
+  end
+
   context '#optimize()' do
     before :each do
       @session.optimize
@@ -97,6 +117,12 @@ describe 'Session' do
       Sunspot.commit
       connection.opts[:open_timeout].should == 0.5
     end
+
+    it 'should open a connection through a provided proxy' do
+      Sunspot.config.solr.proxy = 'http://proxy.com:1234'
+      Sunspot.commit
+      connection.opts[:proxy].should == 'http://proxy.com:1234'
+    end
   end
 
   context 'custom session' do
@@ -123,7 +149,7 @@ describe 'Session' do
     it 'should start out not dirty' do
       @session.dirty?.should be_false
     end
-    
+
     it 'should start out not delete_dirty' do
       @session.delete_dirty?.should be_false
     end
@@ -132,7 +158,7 @@ describe 'Session' do
       @session.index(Post.new)
       @session.dirty?.should be_true
     end
-    
+
     it 'should be not be delete_dirty after adding an item' do
       @session.index(Post.new)
       @session.delete_dirty?.should be_false
@@ -162,12 +188,12 @@ describe 'Session' do
       @session.remove_all
       @session.dirty?.should be_true
     end
-    
+
     it 'should be delete_dirty after a global remove_all' do
       @session.remove_all
       @session.delete_dirty?.should be_true
     end
-    
+
     it 'should not be dirty after a commit' do
       @session.index(Post.new)
       @session.commit
@@ -202,16 +228,30 @@ describe 'Session' do
       connection.should have(0).commits
     end
 
-    it 'should commit when commit_if_dirty called on dirty session' do
+    it 'should hard commit when commit_if_dirty called on dirty session' do
       @session.index(Post.new)
       @session.commit_if_dirty
       connection.should have(1).commits
     end
-    
-    it 'should commit when commit_if_delete_dirty called on delete_dirty session' do
+
+    it 'should soft commit when commit_if_dirty called on dirty session' do
+      @session.index(Post.new)
+      @session.commit_if_dirty(true)
+      connection.should have(1).commits
+      connection.should have(1).soft_commits
+    end
+
+    it 'should hard commit when commit_if_delete_dirty called on delete_dirty session' do
       @session.remove(Post.new)
       @session.commit_if_delete_dirty
       connection.should have(1).commits
+    end
+
+    it 'should soft commit when commit_if_delete_dirty called on delete_dirty session' do
+      @session.remove(Post.new)
+      @session.commit_if_delete_dirty(true)
+      connection.should have(1).commits
+      connection.should have(1).soft_commits
     end
   end
 
