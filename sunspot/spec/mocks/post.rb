@@ -4,8 +4,7 @@ require File.join(File.dirname(__FILE__), 'super_class')
 class Post < SuperClass
   attr_accessor :title, :body, :blog_id, :published_at, :ratings_average,
                 :author_name, :featured, :expire_date, :coordinates, :tags,
-                :boundary
-                :featured_for
+                :boundary, :featured_for
   alias_method :featured?, :featured
 
   def category_ids
