@@ -381,7 +381,7 @@ module Sunspot
       end
 
       def to_indexed(value)
-         if value[:point]
+        if value[:point]
           # value is a point
           "POINT (#{value[:point][0].to_f} #{value[:point][1].to_f})"
         else
@@ -398,13 +398,31 @@ module Sunspot
             }
             "MULTIPOLYGON(#{wkt_polys.join(", ")})"
           end
+          value
+        end
+      end
+    end
+
+    class DateRangeType < DateType
+      def indexed_name(name)
+        "#{name}_dr"
+      end
+
+      def to_indexed(value)
+        if value.respond_to?(:first) && value.respond_to?(:last)
+          "[#{super value.first} TO #{super value.last}]"
+        else
+          super value
         end
       end
 
       def cast(value)
-        value
+        return super unless m = value.match(/^\[(?<start>.+) TO (?<end>.+)\]$/)
+        Range.new super(m[:start]), super(m[:end])
       end
     end
+
+  register DateRangeType, Range
 
     class ClassType < AbstractType
       def indexed_name(name) #:nodoc:

@@ -36,7 +36,7 @@ describe 'more_like_this' do
       fields :body, :tags => 8
     end
     connection.searches.last[:"mlt.fl"].split(',').sort.should == %w(body_textsv tags_textv)
-    connection.should have_last_search_with(:qf => "tags_textv^8")
+    connection.should have_last_search_with(:"mlt.qf" => "tags_textv^8")
   end
 
   it 'doesn\'t assign boosts to fields when not specified' do
@@ -125,6 +125,19 @@ describe 'more_like_this' do
     session.more_like_this(Post.new) do
       adjust_solr_params do |params|
         params[:q]    = 'new search'
+        params[:some] = 'param'
+      end
+    end
+    connection.should have_last_search_with(:q    => 'new search')
+    connection.should have_last_search_with(:some => 'param')
+  end
+
+  it "should send query to solr with adjusted parameters in multiple blocks" do
+    session.more_like_this(Post.new) do
+      adjust_solr_params do |params|
+        params[:q]    = 'new search'
+      end
+      adjust_solr_params do |params|
         params[:some] = 'param'
       end
     end

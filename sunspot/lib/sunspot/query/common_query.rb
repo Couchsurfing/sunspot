@@ -12,15 +12,20 @@ module Sunspot
         end
 
         @pagination = nil
-        @parameter_adjustment = nil
+        @parameter_adjustments = []
       end
 
-      def solr_parameter_adjustment=(block)
-        @parameter_adjustment = block
+      def add_parameter_adjustment(block)
+        @parameter_adjustments << block
       end
 
       def add_sort(sort)
         @sort << sort
+      end
+
+      def add_field_list(field_list)
+        @components << field_list
+        field_list
       end
 
       def add_group(group)
@@ -53,6 +58,10 @@ module Sunspot
         stats
       end
 
+      def add_spellcheck(options = {})
+        @components << Spellcheck.new(options)
+      end
+
       def paginate(page, per_page, offset = nil, cursor = nil)
         if @pagination
           @pagination.offset = offset
@@ -72,7 +81,11 @@ module Sunspot
         @components.each do |component|
           Sunspot::Util.deep_merge!(params, component.to_params)
         end
-        @parameter_adjustment.call(params) if @parameter_adjustment
+
+        @parameter_adjustments.each do |_block|
+          _block.call(params)
+        end
+
         params[:q] ||= '*:*'
         params
       end

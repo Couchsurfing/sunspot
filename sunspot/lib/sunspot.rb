@@ -196,23 +196,61 @@ module Sunspot
       session.index!(*objects)
     end
 
-    # Commits the singleton session
+    # Atomic update object properties on the singleton session.
+    #
+    # ==== Parameters
+    #
+    # clazz<Class>:: the class of the objects to be updated
+    # updates<Hash>:: hash of updates where keys are model ids
+    #                 and values are hash with property name/values to be updated
+    #
+    # ==== Example
+    #
+    #   post1, post2 = new Array(2) { Post.create }
+    #   Sunspot.atomic_update(Post, post1.id => {title: 'New Title'}, post2.id => {description: 'new description'})
+    #
+    # Note that indexed objects won't be reflected in search until a commit is
+    # sent - see Sunspot.index! and Sunspot.commit
+    #
+    def atomic_update(clazz, updates = {})
+      session.atomic_update(clazz, updates)
+    end
+
+    # Atomic update object properties on the singleton session.
+    #
+    # See: Sunspot.atomic_update and Sunspot.commit
+    #
+    # ==== Parameters
+    #
+    # clazz<Class>:: the class of the objects to be updated
+    # updates<Hash>:: hash of updates where keys are model ids
+    #                 and values are hash with property name/values to be updated
+    #
+    def atomic_update!(clazz, updates = {})
+      session.atomic_update!(clazz, updates)
+    end
+
+    # Commits (soft or hard) the singleton session
     #
     # When documents are added to or removed from Solr, the changes are
     # initially stored in memory, and are not reflected in Solr's existing
-    # searcher instance. When a commit message is sent, the changes are written
+    # searcher instance. When a hard commit message is sent, the changes are written
     # to disk, and a new searcher is spawned. Commits are thus fairly
     # expensive, so if your application needs to index several documents as part
     # of a single operation, it is advisable to index them all and then call
     # commit at the end of the operation.
+    # Solr 4 introduced the concept of a soft commit which is much faster
+    # since it only makes index changes visible while not writing changes to disk.
+    # If Solr crashes or there is a loss of power, changes that occurred after
+    # the last hard commit will be lost.
     #
     # Note that Solr can also be configured to automatically perform a commit
     # after either a specified interval after the last change, or after a
     # specified number of documents are added. See
     # http://wiki.apache.org/solr/SolrConfigXml
     #
-    def commit
-      session.commit
+    def commit(soft_commit = false)
+      session.commit soft_commit
     end
 
     # Optimizes the index on the singletion session.
@@ -486,9 +524,9 @@ module Sunspot
     #
     #   Sunspot.batch do
     #     post = Post.new
-    #     Sunspot.add(post)
+    #     Sunspot.index(post)
     #     comment = Comment.new
-    #     Sunspot.add(comment)
+    #     Sunspot.index(comment)
     #   end
     #
     # Sunspot will send both the post and the comment in a single request.
@@ -510,10 +548,10 @@ module Sunspot
     end
 
     # 
-    # Sends a commit if the session is dirty (see #dirty?).
+    # Sends a commit (soft or hard) if the session is dirty (see #dirty?).
     #
-    def commit_if_dirty
-      session.commit_if_dirty
+    def commit_if_dirty(soft_commit = false)
+      session.commit_if_dirty soft_commit
     end
     
     #
@@ -530,8 +568,8 @@ module Sunspot
     # 
     # Sends a commit if the session has deletes since the last commit (see #delete_dirty?).
     #
-    def commit_if_delete_dirty
-      session.commit_if_delete_dirty
+    def commit_if_delete_dirty(soft_commit = false)
+      session.commit_if_delete_dirty soft_commit
     end
     
     # Returns the configuration associated with the singleton session. See

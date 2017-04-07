@@ -1,4 +1,5 @@
 require 'erb'
+require 'yaml'
 
 module Sunspot #:nodoc:
   module Rails #:nodoc:
@@ -11,10 +12,10 @@ module Sunspot #:nodoc:
     #     solr:
     #       hostname: localhost
     #       port: 8982
-    #       min_memory: 512M
-    #       max_memory: 1G
+    #       memory: 1G
     #       solr_jar: /some/path/solr15/start.jar
     #       bind_address: 0.0.0.0
+    #       proxy: false
     #     disabled: false
     #   test:
     #     solr:
@@ -23,6 +24,7 @@ module Sunspot #:nodoc:
     #       log_level: OFF
     #       open_timeout: 0.5
     #       read_timeout: 2
+    #       proxy: false
     #   production:
     #     solr:
     #       scheme: http
@@ -35,10 +37,13 @@ module Sunspot #:nodoc:
     #       solr_home: /some/path
     #       open_timeout: 0.5
     #       read_timeout: 2
+    #       proxy: http://proxy.com:12345
     #     master_solr:
     #       hostname: localhost
     #       port: 8982
     #       path: /solr
+    #     auto_index_callback: after_commit
+    #     auto_remove_callback: after_commit
     #     auto_commit_after_request: true
     #
     # Sunspot::Rails uses the configuration to set up the Solr connection, as
@@ -244,10 +249,6 @@ module Sunspot #:nodoc:
         @log_file ||= (user_configuration_from_key('solr', 'log_file') || default_log_file_location )
       end
 
-      def data_path
-        @data_path ||= user_configuration_from_key('solr', 'data_path') || File.join(::Rails.root, 'solr', 'data', ::Rails.env)
-      end
-
       def pid_dir
         @pid_dir ||= user_configuration_from_key('solr', 'pid_dir') || File.join(::Rails.root, 'solr', 'pids', ::Rails.env)
       end
@@ -274,22 +275,15 @@ module Sunspot #:nodoc:
       #
       # Solr start jar
       #
-      def solr_jar
-        @solr_jar ||= user_configuration_from_key('solr', 'solr_jar')
+      def solr_executable
+        @solr_executable ||= user_configuration_from_key('solr', 'solr_executable')
       end
 
       #
-      # Minimum java heap size for Solr instance
+      # java heap size for Solr instance
       #
-      def min_memory
-        @min_memory ||= user_configuration_from_key('solr', 'min_memory')
-      end
-
-      #
-      # Maximum java heap size for Solr instance
-      #
-      def max_memory
-        @max_memory ||= user_configuration_from_key('solr', 'max_memory')
+      def memory
+        @memory ||= user_configuration_from_key('solr', 'memory')
       end
 
       #
@@ -307,12 +301,34 @@ module Sunspot #:nodoc:
         @open_timeout ||= user_configuration_from_key('solr', 'open_timeout')
       end
 
+      def proxy
+        @proxy ||= user_configuration_from_key('solr', 'proxy')
+      end
+
       #
       # Whether or not to disable Solr.
       # Defaults to false.
       #
       def disabled?
         @disabled ||= (user_configuration_from_key('disabled') || false)
+      end
+
+      #
+      # The callback to use when automatically indexing records.
+      # Defaults to after_save.
+      #
+      def auto_index_callback
+        @auto_index_callback ||=
+          (user_configuration_from_key('auto_index_callback') || 'after_save')
+      end
+
+      #
+      # The callback to use when automatically removing records after deletation.
+      # Defaults to after_destroy.
+      #
+      def auto_remove_callback
+        @auto_remove_callback ||=
+          (user_configuration_from_key('auto_remove_callback') || 'after_destroy')
       end
 
       private

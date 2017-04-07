@@ -25,6 +25,7 @@ module Sunspot
       FieldType.new('tfloat', 'TrieFloat', 'ft'),
       FieldType.new('tdate', 'TrieInt', 'dt')
       FieldType.new('location_rpt', 'SpatialRecursivePrefixTree', 'rpt')
+      FieldType.new('daterange', 'DateRange', 'dr')
     ]
 
     FIELD_VARIANTS = [

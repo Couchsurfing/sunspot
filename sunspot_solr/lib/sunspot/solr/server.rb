@@ -13,19 +13,18 @@ module Sunspot
       JavaMissing = Class.new(ServerError)
 
       # Name of the sunspot executable (shell script)
-      SOLR_START_JAR = File.expand_path(
-        File.join(File.dirname(__FILE__), '..', '..', '..', 'solr', 'start.jar')
+      SOLR_EXECUTABLE = File.expand_path(
+        File.join(File.dirname(__FILE__), '..', '..', '..', 'solr', 'bin', 'solr')
       )
 
       LOG_LEVELS = Set['SEVERE', 'WARNING', 'INFO', 'CONFIG', 'FINE', 'FINER', 'FINEST']
 
-      attr_accessor :min_memory, :max_memory, :bind_address, :port, :log_file
+      attr_accessor :memory, :bind_address, :port, :log_file
 
-      attr_writer :pid_dir, :pid_file, :solr_data_dir, :solr_home, :solr_jar
+      attr_writer :pid_dir, :pid_file, :solr_home, :solr_executable
 
-      def initialize(*args)
-        ensure_java_installed
-        super(*args)
+      def initialize
+        Sunspot::Solr::Java.ensure_install!
       end
 
       #
@@ -91,19 +90,13 @@ module Sunspot
       def run
         bootstrap
 
-        command = ['java']
-        command << "-Xms#{min_memory}" if min_memory
-        command << "-Xmx#{max_memory}" if max_memory
-        command << "-Djetty.port=#{port}" if port
-        command << "-Djetty.host=#{bind_address}" if bind_address
-        command << "-Dsolr.data.dir=#{solr_data_dir}" if solr_data_dir
-        command << "-Dsolr.solr.home=#{solr_home}" if solr_home
-        command << "-Djava.util.logging.config.file=#{logging_config_path}" if logging_config_path
-        command << "-Djava.awt.headless=true"
-        command << '-jar' << File.basename(solr_jar)
-        FileUtils.cd(File.dirname(solr_jar)) do
-          exec(*command)
-        end
+        command = %w[./solr start -f]
+        command << "-m" << "#{memory}" if memory
+        command << "-p" << "#{port}" if port
+        command << "-h" << "#{bind_address}" if bind_address
+        command << "-s" << "#{solr_home}" if solr_home
+
+        exec_in_solr_executable_directory(command)
       end
 
       #
@@ -118,6 +111,7 @@ module Sunspot
           pid = IO.read(pid_path).to_i
           begin
             Process.kill('TERM', pid)
+            exec_in_solr_executable_directory(['./solr', 'stop', '-p', "#{port}"]) if port
           rescue Errno::ESRCH
             raise NotRunningError, "Process with PID #{pid} is no longer running"
           ensure
@@ -151,16 +145,20 @@ module Sunspot
         File.expand_path(@pid_dir || FileUtils.pwd)
       end
 
-      def solr_data_dir
-        File.expand_path(@solr_data_dir || Dir.tmpdir)
-      end
-
       def solr_home
-        File.expand_path(@solr_home || File.join(File.dirname(solr_jar), 'solr'))
+        File.expand_path(@solr_home || File.join(File.dirname(solr_executable), '..', 'solr'))
       end
 
-      def solr_jar
-        @solr_jar || SOLR_START_JAR
+      def solr_executable
+        @solr_executable || SOLR_EXECUTABLE
+      end
+
+      def solr_executable_directory
+        @solr_executable_directory ||= File.dirname(solr_executable)
+      end
+
+      def exec_in_solr_executable_directory(command)
+        FileUtils.cd(solr_executable_directory) { exec(*command) }
       end
 
       #
@@ -189,22 +187,12 @@ module Sunspot
       # Boolean:: success
       #
       def create_solr_directories
-        [solr_data_dir, pid_dir].each do |path|
+        [pid_dir].each do |path|
           FileUtils.mkdir_p(path) unless File.exists?(path)
         end
       end
 
       private
-
-      def ensure_java_installed
-        unless defined?(@java_installed)
-          @java_installed = Sunspot::Solr::Java.installed?
-          unless @java_installed
-            raise JavaMissing.new("You need a Java Runtime Environment to run the Solr server")
-          end
-        end
-        @java_installed
-      end
 
       def logging_config_path
         return @logging_config_path if defined?(@logging_config_path)

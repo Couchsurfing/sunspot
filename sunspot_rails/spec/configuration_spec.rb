@@ -22,6 +22,10 @@ describe Sunspot::Rails::Configuration, "default values without a sunspot.yml" d
     @config.userinfo.should be_nil
   end
 
+  it "should not set a proxy" do
+    @config.proxy.should be_nil
+  end
+
   describe "port" do
     it "should default to port 8981 in test" do
       ::Rails.stub(:env => 'test')
@@ -67,11 +71,6 @@ describe Sunspot::Rails::Configuration, "default values without a sunspot.yml" d
     @config.solr_home.should == '/some/path/solr'
   end
 
-  it "should handle the 'data_path' property when not set" do
-    Rails.should_receive(:root).at_least(1).and_return('/some/path')
-    @config.data_path.should == '/some/path/solr/data/test'
-  end
-
   it "should handle the 'pid_dir' property when not set" do
     Rails.should_receive(:root).at_least(1).and_return('/some/path')
     @config.pid_dir.should == '/some/path/solr/pids/test'
@@ -91,6 +90,14 @@ describe Sunspot::Rails::Configuration, "default values without a sunspot.yml" d
 
   it "should handle the 'disabled' property when not set" do
     @config.disabled?.should be_false
+  end
+
+  it "should handle the 'auto_index_callback' property when not set" do
+    @config.auto_index_callback.should == "after_save"
+  end
+
+  it "should handle the 'auto_remove_callback' property when not set" do
+    @config.auto_remove_callback.should == "after_destroy"
   end
 end
 
@@ -128,10 +135,6 @@ describe Sunspot::Rails::Configuration, "user provided sunspot.yml" do
     @config.solr_home.should == '/my_superior_path'
   end
 
-  it "should handle the 'data_path' property when set" do
-    @config.data_path.should == '/my_superior_path/data'
-  end
-
   it "should handle the 'pid_dir' property when set" do
     @config.pid_dir.should == '/my_superior_path/pids'
   end
@@ -158,6 +161,25 @@ describe Sunspot::Rails::Configuration, "user provided sunspot.yml" do
 
   it "should handle the 'open_timeout' property when set" do
     @config.open_timeout.should == 0.5
+  end
+
+  it "should handle the 'proxy' property when set" do
+    @config.proxy.should == 'http://proxy.com:12345'
+  end
+end
+
+describe Sunspot::Rails::Configuration, "with auto_index_callback and auto_remove_callback set" do
+  before do
+    ::Rails.stub(:env => 'config_commit_test')
+    @config = Sunspot::Rails::Configuration.new
+  end
+
+  it "should handle the 'auto_index_callback' property when set" do
+    @config.auto_index_callback.should == "after_commit"
+  end
+
+  it "should handle the 'auto_remove_callback' property when set" do
+    @config.auto_remove_callback.should == "after_commit"
   end
 end
 

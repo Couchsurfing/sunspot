@@ -8,7 +8,8 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ['Mat Brown', 'Peer Allan', 'Dmitriy Dzema', 'Benjamin Krause', 'Marcel de Graaf', 'Brandon Keepers', 'Peter Berkenbosch',
                   'Brian Atkinson', 'Tom Coleman', 'Matt Mitchell', 'Nathan Beyer', 'Kieran Topping', 'Nicolas Braem', 'Jeremy Ashkenas',
-                  'Dylan Vaughn', 'Brian Durand', 'Sam Granieri', 'Nick Zadrozny', 'Jason Ronallo', 'Ryan Wallace', 'Nicholas Jakobsen']
+                  'Dylan Vaughn', 'Brian Durand', 'Sam Granieri', 'Nick Zadrozny', 'Jason Ronallo', 'Ryan Wallace', 'Nicholas Jakobsen',
+                  'Bragadeesh J', 'Ethiraj Srinivasan']
   s.email       = ["mat@patch.com"]
   s.homepage    = "http://outoftime.github.com/sunspot"
   s.summary = 'Library for expressive, powerful interaction with the Solr search engine'
@@ -26,7 +27,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency 'rsolr', '~>1.0.7'
+  s.add_dependency 'rsolr', '>= 1.1.1', '< 3'
   s.add_dependency 'pr_geohash', '~>1.0'
 
   s.add_development_dependency 'rspec', '~>2.6.0'
