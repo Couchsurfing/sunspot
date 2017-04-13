@@ -67,6 +67,17 @@
         <filter class="solr.PorterStemFilterFactory"/>
       </analyzer>
     </fieldType>
+    <fieldType class="solr.TextField" name="text_pre" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.EdgeNGramFilterFactory" minGramSize="1" maxGramSize="16" side="front"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
     <!-- *** This fieldType is used by Sunspot! *** -->
     <fieldType name="boolean" class="solr.BoolField" omitNorms="true"/>
     <!-- *** This fieldType is used by Sunspot! *** -->
@@ -99,7 +110,7 @@
     <fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType"
                spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
                geo="false"
-               worldBounds="-100 -100 100 100"
+               worldBounds="-20037508.3429 -20037508.3429 20037508.3429 20037508.3429"
                distErrPct="0.025"
                maxDistErr="0.000009"
                units="degrees"/>
@@ -150,6 +161,7 @@
     <dynamicField name="*_text" stored="false" type="text" multiValued="true" indexed="true"/>
     <!-- *** This dynamicField is used by Sunspot! *** -->
     <dynamicField name="*_texts" stored="true" type="text" multiValued="true" indexed="true"/>
+    <dynamicField name="*_textp" stored="false" type="text_pre" multiValued="true" indexed="true"/>
     <!-- *** This dynamicField is used by Sunspot! *** -->
     <dynamicField name="*_b" stored="false" type="boolean" multiValued="false" indexed="true"/>
     <!-- *** This dynamicField is used by Sunspot! *** -->
