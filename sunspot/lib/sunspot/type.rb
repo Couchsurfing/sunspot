@@ -384,21 +384,6 @@ module Sunspot
         if value[:point]
           # value is a point
           "POINT (#{value[:point][0].to_f} #{value[:point][1].to_f})"
-        else
-          # value is a polygon
-          polygons = value[:polygons]
-          if polygons.length == 1
-            # single polygon
-            points = polygons[0].map { |el| "#{el[0]} #{el[1]}"}
-            "POLYGON((#{points.join(", ")}))"
-          elsif polygons.length > 1
-            # multi-polygon
-            wkt_polys = polygons.map {|poly|
-              "((#{poly.map { |el| "#{el[0]} #{el[1]}"}.join(", ")}))"
-            }
-            "MULTIPOLYGON(#{wkt_polys.join(", ")})"
-          end
-          value
         end
       end
     end

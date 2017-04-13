@@ -163,30 +163,6 @@ module Sunspot
       def in_bounding_box(first_corner, second_corner)
         @query.add_geo(Sunspot::Query::Bbox.new(@field, first_corner, second_corner))
       end
-
-      # TODO Make this work.
-      def in_polygon(polygon)
-        obj = OpenStruct.new(field: @field, polygon: polygon)
-        def obj.to_params
-          factory = RGeo::Geographic.simple_mercator_factory(buffer_resolution: 4)
-          poly = ""
-          polygon.each do |set|
-            projected_point = factory.project(factory.point(set[0], set[1]))
-            poly = poly + "#{projected_point.y} #{projected_point.x}" + ", "
-          end
-          poly = poly[0..-3]
-          {fq: %Q{#{field.indexed_name}:"IsWithin(POLYGON((#{poly}))) distErrPct=0"}}
-        end
-        @query.add_geo(obj)
-      end
-
-      def containing_point(point)
-        obj = OpenStruct.new(field: @field, point: point)
-        def obj.to_params
-          {fq: %Q{#{field.indexed_name}:"Contains(#{point[0]} #{point[1]})"}}
-        end
-        @query.add_geo(obj)
-      end
     end
   end
 end
