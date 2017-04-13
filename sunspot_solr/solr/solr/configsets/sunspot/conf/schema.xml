@@ -113,7 +113,7 @@
                worldBounds="-20037508.3429 -20037508.3429 20037508.3429 20037508.3429"
                distErrPct="0.025"
                maxDistErr="0.000009"
-               units="degrees"/>
+               distanceUnits="degrees"/>
   </types>
   <fields>
     <!-- Valid attributes for fields:
