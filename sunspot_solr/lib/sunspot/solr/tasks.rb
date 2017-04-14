@@ -28,14 +28,12 @@ namespace :sunspot do
       Rake::Task['sunspot:solr:start'].invoke
     end
 
-    # for backwards compatibility
-    task :reindex, [:batch_size, :models, :silence] => :"sunspot:reindex"
-
     def server
       if defined?(Sunspot::Rails::Server)
         Sunspot::Rails::Server.new
       else
         Sunspot::Solr::Server.new
+      end
     end
   end
 end
