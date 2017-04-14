@@ -7,18 +7,18 @@ namespace :sunspot do
         abort("This command is not supported on #{RUBY_PLATFORM}. " +
               "Use rake sunspot:solr:run to run Solr in the foreground.")
       end
-      server.start
+      # TODO don't hardcode port if a yml file is present
+      sh 'bundle exec rake sunspot-solr start -p 8982'
       puts 'Successfully started Solr ...'
     end
 
     desc 'Run the Solr instance in the foreground'
     task run: :environment do
-      server.run
     end
 
     desc 'Stop the Solr instance'
     task stop: :environment do
-      server.stop
+      sh "ps -ef | grep solr | grep -v grep | awk '{ print $2 }' | xargs kill "
       puts 'Successfully stopped Solr ...'
     end
 
@@ -30,15 +30,5 @@ namespace :sunspot do
 
     # for backwards compatibility
     task :reindex, [:batch_size, :models, :silence] => :"sunspot:reindex"
-
-    def server
-      
-
-      if defined?(Sunspot::Rails::Server)
-        Sunspot::Rails::Server.new
-      else
-        Sunspot::Solr::Server.new
-      end
-    end
   end
 end
