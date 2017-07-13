@@ -388,6 +388,19 @@ module Sunspot
       end
     end
 
+    class LocationRptGeoType < AbstractType
+      def indexed_name(name)
+        "#{name}_rptgeo"
+      end
+
+      def to_indexed(value)
+        if value[:point]
+          # value is a point
+          "POINT (#{value[:point][0].to_f} #{value[:point][1].to_f})"
+        end
+      end
+    end
+
     class DateRangeType < DateType
       def indexed_name(name)
         "#{name}_dr"

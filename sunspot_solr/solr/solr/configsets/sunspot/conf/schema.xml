@@ -114,7 +114,7 @@
                distErrPct="0.025"
                maxDistErr="0.000009"
                distanceUnits="degrees"/>
-    <fieldType name="location_rpt_geo"   class="solr.SpatialRecursivePrefixTreeFieldType"
+    <fieldType name="location_rptgeo"   class="solr.SpatialRecursivePrefixTreeFieldType"
                spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
                distErrPct="0.025"
                maxDistErr="0.000009"
@@ -280,7 +280,7 @@
     <!-- Type used to index the polygon components for the "location_rpt" FieldType -->
     <dynamicField name="*_rpt" stored="true" type="location_rpt" multiValued="true" indexed="true"/>
 
-    <dynamicField name="*_rptgeo" stored="true" type="location_rpt_geo" multiValued="true" indexed="true"/>
+    <dynamicField name="*_rptgeo" stored="true" type="location_rptgeo" multiValued="true" indexed="true"/>
 
     <field name="textSpell" stored="false" type="textSpell" multiValued="true" indexed="true"/>
     <!-- v2.2.7:sunspot_solr/solr/solr/configsets/sunspot/conf/schema.xml -->
