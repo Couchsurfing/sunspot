@@ -48,7 +48,7 @@ module Sunspot
       #
       def order_by_geodist(field_name, lat, lon, direction = nil)
         field = @setup.field(field_name)
-        if (field.type.class == Sunspot::Type::LocationRptType) || (field.type.class == Sunspot::Type::LocationRptGeoType)
+        if (field.type.class == Sunspot::Type::LocationRptType) || (field.type.class == Sunspot::Type::LocationRptgeoType)
           obj = Struct.new(:field).new(field)
           def obj.to_params
             {

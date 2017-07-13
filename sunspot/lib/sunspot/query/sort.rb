@@ -111,7 +111,7 @@ module Sunspot
         end
 
         def to_param
-          if (@field.type.class == Sunspot::Type::LocationRptType) || (@field.type.class == Sunspot::Type::LocationRptGeoType)
+          if (@field.type.class == Sunspot::Type::LocationRptType) || (@field.type.class == Sunspot::Type::LocationRptgeoType)
             "geodist(#{@lat},#{@lon}) #{direction_for_solr}"
           else
             "geodist(#{@field.indexed_name.to_sym},#{@lat},#{@lon}) #{direction_for_solr}"
