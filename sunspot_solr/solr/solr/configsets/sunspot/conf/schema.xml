@@ -107,14 +107,14 @@
     </fieldType>
     <!-- A specialized field for geospatial search. If indexed, this fieldType must not be multivalued. -->
     <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
-<!--     <fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType"
+    <fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType"
                spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
                geo="false"
                worldBounds="-20037508.3429 -20037508.3429 20037508.3429 20037508.3429"
                distErrPct="0.025"
                maxDistErr="0.000009"
-               distanceUnits="degrees"/> -->
-    <fieldType name="location_rpt"   class="solr.SpatialRecursivePrefixTreeFieldType"
+               distanceUnits="degrees"/>
+    <fieldType name="location_rpt_geo"   class="solr.SpatialRecursivePrefixTreeFieldType"
                spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
                distErrPct="0.025"
                maxDistErr="0.000009"
@@ -279,8 +279,8 @@
 
     <!-- Type used to index the polygon components for the "location_rpt" FieldType -->
     <dynamicField name="*_rpt" stored="true" type="location_rpt" multiValued="true" indexed="true"/>
-<!-- 
-    <dynamicField name="*_rpt_geo" stored="true" type="location_rpt_geo" multiValued="true" indexed="true"/> -->
+
+    <dynamicField name="*_rpt_geo" stored="true" type="location_rpt_geo" multiValued="true" indexed="true"/>
 
     <field name="textSpell" stored="false" type="textSpell" multiValued="true" indexed="true"/>
     <!-- v2.2.7:sunspot_solr/solr/solr/configsets/sunspot/conf/schema.xml -->
