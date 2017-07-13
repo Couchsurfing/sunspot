@@ -388,7 +388,7 @@ module Sunspot
       end
     end
 
-    class LocationRptGeoType < AbstractType
+    class LocationRptgeoType < AbstractType
       def indexed_name(name)
         "#{name}_rptgeo"
       end
