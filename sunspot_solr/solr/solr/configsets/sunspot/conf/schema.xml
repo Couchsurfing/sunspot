@@ -114,6 +114,11 @@
                distErrPct="0.025"
                maxDistErr="0.000009"
                distanceUnits="degrees"/>
+    <fieldType name="location_rpt_geo"   class="solr.SpatialRecursivePrefixTreeFieldType"
+               spatialContextFactory="com.spatial4j.core.context.jts.JtsSpatialContextFactory"
+               distErrPct="0.025"
+               maxDistErr="0.000009"
+               distanceUnits="degrees"/>
   </types>
   <fields>
     <!-- Valid attributes for fields:
