@@ -280,7 +280,7 @@
     <!-- Type used to index the polygon components for the "location_rpt" FieldType -->
     <dynamicField name="*_rpt" stored="true" type="location_rpt" multiValued="true" indexed="true"/>
 
-    <dynamicField name="*_rpt_geo" stored="true" type="location_rpt_geo" multiValued="true" indexed="true"/>
+    <dynamicField name="*_rptgeo" stored="true" type="location_rpt_geo" multiValued="true" indexed="true"/>
 
     <field name="textSpell" stored="false" type="textSpell" multiValued="true" indexed="true"/>
     <!-- v2.2.7:sunspot_solr/solr/solr/configsets/sunspot/conf/schema.xml -->
