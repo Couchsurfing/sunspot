@@ -55,7 +55,7 @@ module Sunspot
     #
     def remove_all(clazz = nil)
       if clazz
-        @connection.delete_by_query("type:#{escape(clazz.name)}")
+        @connection.delete_by_query("type:#{RSolr.solr_escape(clazz.name)}")
       else
         @connection.delete_by_query("*:*")
       end

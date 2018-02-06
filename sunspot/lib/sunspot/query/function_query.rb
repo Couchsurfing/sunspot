@@ -34,7 +34,7 @@ module Sunspot
       end
 
       def to_s
-        "#{escape(@field.indexed_name)}" << (@boost_amount ? "^#{@boost_amount}" : "")
+        "#{RSolr.solr_escape(@field.indexed_name)}" << (@boost_amount ? "^#{@boost_amount}" : "")
       end
     end
 
